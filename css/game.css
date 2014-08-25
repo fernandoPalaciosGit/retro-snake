@@ -7,3 +7,11 @@ body{
 	border: 2px solid red;
 	background-color: #999;
 }
+
+.btnStartGame button span{
+	display: none;
+}
+
+.show{
+	display: inline !important;
+}
