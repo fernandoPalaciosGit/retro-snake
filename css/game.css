@@ -1,0 +1,9 @@
+body{
+	text-align: center;
+}
+.snakeCanvas canvas{
+	width: 300px;
+	height: 150px;
+	border: 2px solid red;
+	background-color: #999;
+}
