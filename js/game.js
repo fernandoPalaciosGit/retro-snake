@@ -14,13 +14,13 @@ var SN = {
 	// protagonista del Juego
 	asset: {
 		// posicion respecto el canvas
-		posX: 0,
-		posY: 0,
+		posX: null,
+		posY: null,
 		// dimensiones del asset
 		w: 20,
 		h: 20,
 		// direccion del asset: arriba(0), dch(1), abajo(2), izq(3)
-		dir: 1,
+		dir: null,
 		// velocidad de direccion
 		vel : 4
 	},
@@ -33,7 +33,7 @@ var SN = {
 		KEY_DOWN : 40,
 		KEY_ENTER: 13
 	},
-	paused: false
+	paused: null
 };
 
 // resetear el layer cada vez que pintamos
@@ -55,14 +55,14 @@ var paintAsset = function (ctx){
 	ctx.fillStyle = '#fff';
 	if( !!SN.paused ){
 		SN.ctx.textAlign='center';
-		SN.ctx.fillText('PAUSE',150,75);
+		SN.ctx.fillText( 'PAUSE', (SN.canvas.width/2), (SN.canvas.height/2) );
 		SN.ctx.textAlign='left';
 	} else {
 		// mostrar la tecla presionada
 		// ctx.fillText('Last Press: '+ SN.keyPress.lastPress, 0, 20);
 		
 		// mostrar direccion del asset
-		ctx.fillText('Direction: '+ SN.asset.dir, 0, 20);
+		ctx.fillText('Direction: '+ SN.asset.dir, 5, 20);
 	}
 };
 
@@ -129,12 +129,24 @@ var animateAsset = function (){
 	paintAsset(SN.ctx);
 };
 
+// iniciar parametros del Juego
+var initGameVar = function (){
+	// creamos el contexto del canvas
+	SN.ctx = SN.canvas.getContext('2d');
+	// iniciamos la posicion del asset
+	SN.asset.posX = (SN.canvas.width / 2) - (SN.asset.w / 2);
+	SN.asset.posY = (SN.canvas.height / 2) - (SN.asset.h / 2);
+	SN.asset.dir = 1; //empezara a correr hacia la derecha
+	SN.keyPress.lastPress = null;
+	SN.paused = false;
+};
+
 // inicializar el Juego cuando cargue el http	
 ;( function (w, d){
 	d.addEventListener('keydown', saveUserKey, false);
 
-	// creamos el contexto del canvas
-	SN.ctx = SN.canvas.getContext('2d');
+	//inicializar variables
+	initGameVar();
 
 	// inicializar Juego
 	d.querySelector('.btnStartGame button')
