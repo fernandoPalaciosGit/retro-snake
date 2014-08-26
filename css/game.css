@@ -8,8 +8,10 @@ body{
 	background-color: #999;
 }
 
-.btnStartGame button span{
+.rulesGame .paused{
 	display: none;
+	font-size: 1.1em;
+	font-weight: bold;
 }
 
 .show{

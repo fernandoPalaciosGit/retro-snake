@@ -1,3 +1,6 @@
+// el objeto canvas lo necesitamos en mucho lugares inaccesibles
+var canvasGame = document.querySelector('.snakeCanvas canvas');
+
 // el navegador gestionara los recursos de la animacion del asset
 window.requestAnimationFrame = ( function (w) {
     return w.requestAnimationFrame ||
@@ -25,7 +28,7 @@ var Creature = function ( x, y, width, height, d, v ){
 						(this.posX + this.w) > rect.posX &&
 						this.posY < (rect.posY + rect.h) &&
 						(this.posY + this.h) > rect.posY	);
-		}
+		}1
 	};
 
 	// pintar el objeto con el contexto de canvas
@@ -38,10 +41,17 @@ var Creature = function ( x, y, width, height, d, v ){
 
 // variables estaticas del Juego
 var SN = {
-	canvas : document.querySelector('.snakeCanvas canvas'),
-	ctx: null,
+	canvas : canvasGame,
+	ctx: canvasGame.getContext('2d'),
+	// (posX, posY, w, h, dir, vel)
 	asset: null,	// criatura del juagdor
-	enemy: [],		// criatura enemiga
+	food: new Creature( 1, 1, 10, 10, null , null),		// criatura comida
+	enemy: [ // criatura enemiga
+		new Creature(100, 50, 10, 10, null , null),
+		new Creature(100, 100, 10, 10, null , null),
+		new Creature(200, 50, 10, 10, null , null),
+		new Creature(200, 100, 10, 10, null , null),
+	],
 	keyPress: {		// interaccion del usuario
 		lastPress : null,
 		KEY_LEFT : 37,
@@ -51,7 +61,8 @@ var SN = {
 		KEY_ENTER: 13
 	},
 	paused: null,
-	score: null
+	score: null,
+	gameover: false
 };
 
 // resetear el layer cada vez que pintamos
@@ -66,26 +77,34 @@ var paintAsset = function (ctx){
 	ctx.fillStyle = '#000';
 	ctx.fillRect(0, 0, SN.canvas.width, SN.canvas.height);
 	
-	// dibujar assets
+	// dibujar asset de juagador
 	ctx.fillStyle = '#0f0';
 	SN.asset.fill(ctx);
+
+	//dibujar asset de comida
+	ctx.fillStyle='#999';
+	SN.food.fill(ctx);
+
+	// dibujar asset de enemigos
 	ctx.fillStyle='#f00';
-   SN.enemy[0].fill(ctx);
+	for (var i = 0, len = SN.enemy.length; i < len; i++) {
+		SN.enemy[i].fill(ctx);
+	};
 
 	ctx.fillStyle = '#fff';
 	if( !!SN.paused ){
-		SN.ctx.textAlign='center';
-		SN.ctx.fillText( 'PAUSE', (SN.canvas.width/2), (SN.canvas.height/2) );
-		SN.ctx.textAlign='left';
+		SN.ctx.textAlign = 'center';
+		if( !!SN.gameover ){
+			ctx.fillStyle='#f00';
+			SN.ctx.fillText( 'GAME OVER', (SN.canvas.width/2), (SN.canvas.height/2) );
+		}else{
+			SN.ctx.fillText( 'PAUSE', (SN.canvas.width/2), (SN.canvas.height/2) );
+		}
 	} else {
-		// mostrar la tecla presionada
-		// ctx.fillText('Last Press: '+ SN.keyPress.lastPress, 0, 20);
-		
-		// mostrar direccion del asset
-		// ctx.fillText('Direction: '+ SN.asset.dir, 5, 20);
-
-		//mostrar puntuacion
-		ctx.fillText('Score: '+ SN.score, 5, 20);
+		SN.ctx.textAlign = 'left';
+		// ctx.fillText('Last Press: '+ SN.keyPress.lastPress, 0, 20); /*tecla presionada*/
+		// ctx.fillText('Direction: '+ SN.asset.dir, 5, 20); /*direccion del asset*/
+		ctx.fillText('Score: '+ SN.score, 5, 20); /*puntuacion*/
 	}
 };
 
@@ -93,12 +112,20 @@ var paintAsset = function (ctx){
 var moveAsset = function (){
 	// MOVIMIENTO PAUSADO
 	if ( SN.keyPress.lastPress == SN.keyPress.KEY_ENTER ){
+		SN.gameover = false;
 		SN.keyPress.lastPress = null; // anulamos la interaccion pero mantenemos la direcion (dir)
 		SN.paused = !SN.paused; // invertimos la pausa cada vez que presionamos
 	}
 
 	// MOVIMIENTO NO PAUSADO
 	if( !SN.paused ){
+		// comprobar si hemos perdido
+		if( SN.gameover ){
+			// resetear variables del juego
+			SN.gameover = true;
+			initGameVar();
+		}
+
 		// definir la direccin del asset
 		if( SN.keyPress.lastPress == SN.keyPress.KEY_UP){
 			SN.asset.dir = 0;
@@ -135,12 +162,28 @@ var moveAsset = function (){
 			SN.asset.posY = (SN.canvas.height - SN.asset.h);
 		}
 
-		// Comprobamos la interseccion de los assrts, score y cambiar la posicion de la comida
-		if( SN.asset.intersects( SN.enemy[0] ) ){
+		/* Comprobamos la colision con la comida
+			score y cambiar la posicion de la comida */
+		if( SN.asset.intersects( SN.food ) ){
 			SN.score++;
-			SN.enemy[0].posX = randomPosition( SN.canvas.width/10-1 )*10;
-			SN.enemy[0].posY = randomPosition( SN.canvas.height/10-1 )*10;
+			SN.food.posX = randomPosition( SN.canvas.width/10-1 )*10;
+			SN.food.posY = randomPosition( SN.canvas.height/10-1 )*10;
 		}
+
+		// comprobar la intersecion con los enemigos
+		for (var i = 0, len = SN.enemy.length; i < len; i++) {
+			if( SN.food.intersects( SN.enemy[i] ) ){
+				SN.food.posX = randomPosition( SN.canvas.width/10-1 )*10;
+				SN.food.posY = randomPosition( SN.canvas.height/10-1 )*10;
+			}
+
+			// si colisionamos con algun muro, posteriormente reiniciaremos las variables
+			if( SN.asset.intersects( SN.enemy[i] ) ){
+				SN.gameover = true;
+			}
+
+		};
+
 	}
 };
 
@@ -159,32 +202,22 @@ var animateAsset = function (){
 
 // iniciar parametros del Juego
 var initGameVar = function (){
-	// creamos el contexto del canvas
-	SN.ctx = SN.canvas.getContext('2d');
-
-	// iniciamos asset de juagador y enemigo (posX, posY, w, h, dir, vel)
+	// resetar la posicion de la comida y del asset
 	SN.asset = new Creature( null, null, 15, 15, 1, 4);
-	SN.enemy.push( new Creature( 40, 40, 15, 15, null , null) );
+	SN.food.posX = randomPosition( SN.canvas.width/10-1 )*10;
+   SN.food.posY = randomPosition( SN.canvas.height/10-1 )*10;
 
 	// resetear variables del juego
+	SN.paused = true;
 	SN.keyPress.lastPress = null;
-	SN.paused = false;
 	SN.score = 0;
 };
 
-// inicializar el Juego cuando cargue el http	
+// inicializar el Juego
 ;( function (w, d){
 	d.addEventListener('keydown', saveUserKey, false);
-
-	//inicializar variables
+	// inicializar variables del Juego
 	initGameVar();
-
-	// inicializar Juego
-	d.querySelector('.btnStartGame button')
-		.addEventListener('click', function (evClick){
-			this.disabled = true;
-			this.querySelector('.played').classList.toggle('show');
-			this.querySelector('.paused').classList.toggle('show');
-			animateAsset();
-		}, false);
+	// al inicializar el juego estara pausado
+	animateAsset();
 } (window, document) );
