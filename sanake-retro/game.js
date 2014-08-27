@@ -20,31 +20,32 @@ var Creature = function ( x, y, width, height, d ){
 	this.posY = y || (SN.canvas.height / 2) - (this.h / 2);
 	this.dir = d; // direccion del asset: arriba(0), dch(1), abajo(2), izq(3)
 
-	// conprobar colision con un asset del mismo tipo de constructor
-	this.intersects = function (rect){
-		if( !!rect ){
-			return(	this.posX < (rect.posX + rect.w) &&
-						(this.posX + this.w) > rect.posX &&
-						this.posY < (rect.posY + rect.h) &&
-						(this.posY + this.h) > rect.posY	);
-		}1
-	};
+};
 
-	// pintar el objeto con el contexto de canvas
-	this.fill = function (ctx){
-		if( !!ctx ){
-			ctx.fillRect( this.posX, this.posY, this.w, this.h);
-		}
-	};
+// conprobar colision con un asset del mismo tipo de constructor
+Creature.prototype.intersects = function (rect){
+	if( !!rect ){
+		return(	this.posX < (rect.posX + rect.w) &&
+					(this.posX + this.w) > rect.posX &&
+					this.posY < (rect.posY + rect.h) &&
+					(this.posY + this.h) > rect.posY	);
+	}
+};
+
+// pintar el objeto con el contexto de canvas
+Creature.prototype.fillImage = function (ctx, img, color){
+	// comprobar que la imagen ya esta cargada por el frameset
+	if( !!img.width ){
+		ctx.drawImage(img, this.posX, this.posY, this.w, this.h);
+	} else {
+			ctx.strokeStyle = color;
+			SN.ctx.strokeRect(this.posX, this.posY, this.w, this.h);
+	}
 };
 
 // variables estaticas del Juego
 var SN = {
-	vel: 35, // velocidad de direccion
-	// ecuacion de movimiento (exponencial)
-	getHeadSnakePos: function ( step ){
-		return ( (SN.vel/100) + (step / 100)) + 1 ;
-	}, 
+	vel: 35, // velocidad del frameset de movimiento
 	canvas : canvasGame,
 	ctx: canvasGame.getContext('2d'),
 	snakeBody: [],	// criatura del juagdor
@@ -90,16 +91,12 @@ var paintAsset = function (ctx){
 	ctx.fillRect(0, 0, SN.canvas.width, SN.canvas.height);
 	
 	// dibujar cada asset del juagador (cuerpo de serpiente)
-	ctx.fillStyle = '#0f0';
 	for (var i = 0, len = SN.snakeBody.length; i < len; i++) {
-		// SN.snakeBody[i].fill(ctx);
-		SN.ctx.drawImage(SN.asset.snake.img, SN.snakeBody[i].posX, SN.snakeBody[i].posY);
-	};
+		SN.snakeBody[i].fillImage(ctx, SN.asset.snake.img, '#0f0')
+	}
 
 	//dibujar asset de comida
-	ctx.fillStyle='#999';
-	// SN.food.fill(ctx);
-	SN.ctx.drawImage(SN.asset.food.img, SN.food.posX, SN.food.posY);
+	SN.food.fillImage(ctx, SN.asset.food.img, '#f00')
 
 	ctx.fillStyle = '#fff';
 	if( !!SN.paused ){
@@ -112,8 +109,6 @@ var paintAsset = function (ctx){
 		}
 	} else {
 		SN.ctx.textAlign = 'left';
-		// ctx.fillText('Last Press: '+ SN.keyPress.lastPress, 0, 20); /*tecla presionada*/
-		// ctx.fillText('Direction: '+ SN.snakeBody.dir, 5, 20); /*direccion del asset*/
 		ctx.fillText('Score: '+ SN.score, 5, 20); /*puntuacion*/
 	}
 };
@@ -135,6 +130,15 @@ var moveAsset = function (){
 			SN.gameover = true;
 			initGameVar();
 		} else {
+			// MOVE SNAKE-BODY ( don´t move the first asset; that´s the head)
+			/* Movemos los assets desde el ultimo hasta el antertior a la cabeza de serpiente, 
+				Efecto de oruga -> la cola va “empujando” al resto del cuerpo, asi evitamos la colision de la cabeza lcon el cuerpo*/
+			for (var i = SN.snakeBody.length - 1; i > 0; i--) {
+				SN.snakeBody[i].posX = SN.snakeBody[i - 1].posX;
+				SN.snakeBody[i].posY = SN.snakeBody[i - 1].posY;
+				// la cabeza es la unica que cambia de posicion con respecto a la velocidad;
+				// cuando alcanzemos el ultimo de los assets, e anterior a la cabeza, este recuperara la posicion anterior de la cabeza
+			};
 
 			// CHANGE DIRECTION (depending on SN.keyPress.lastPress head-snake)
 			// colisiones con el cuerpo: NO CAMBIAR A DIRECCION A LA OPUESTA
@@ -154,28 +158,15 @@ var moveAsset = function (){
 
 			// MOVE SNAKE-HEAD (depending on SN.snakeBody.dir)
 			if( SN.snakeBody[0].dir == 0){
-				SN.snakeBody[0].posY -= SN.getHeadSnakePos(SN.snakeBody[0].posY);
-
+				SN.snakeBody[0].posY -= SN.snakeBody[0].h;
 			} else if ( SN.snakeBody[0].dir == 1){1
-				SN.snakeBody[0].posX += SN.getHeadSnakePos(SN.snakeBody[0].posX);
-
+				SN.snakeBody[0].posX += SN.snakeBody[0].w;
 			} else if ( SN.snakeBody[0].dir == 2){
-				SN.snakeBody[0].posY += SN.getHeadSnakePos(SN.snakeBody[0].posY);
-
+				SN.snakeBody[0].posY += SN.snakeBody[0].h;
 			} else if ( SN.snakeBody[0].dir == 3){
-				SN.snakeBody[0].posX -= SN.getHeadSnakePos(SN.snakeBody[0].posX);
+				SN.snakeBody[0].posX -= SN.snakeBody[0].w;
 			}
-
-			// MOVE SNAKE-BODY ( don´t move the first asset; that´s the head)
-			/* Movemos los assets desde el ultimo hasta el antertior a la cabeza de serpiente, 
-				Efecto de oruga -> la cola va “empujando” al resto del cuerpo, asi evitamos la colision de la cabeza lcon el cuerpo*/
-			for (var i = SN.snakeBody.length - 1; i > 0; i--) {
-				SN.snakeBody[i].posX = SN.snakeBody[i - 1].posX;
-				SN.snakeBody[i].posY = SN.snakeBody[i - 1].posY;
-				// la cabeza es la unica que cambia de posicion con respecto a la velocidad;
-				// cuando alcanzemos el ultimo de los assets, e anterior a la cabeza, este recuperara la posicion anterior de la cabeza
-			};
-
+			
 			// SNAKE-HEAD OUT HORIZONTAL SCREEN
 			if( (SN.snakeBody[0].posX + SN.snakeBody[0].w) > SN.canvas.width){
 				SN.snakeBody[0].posX = 0;
@@ -193,17 +184,17 @@ var moveAsset = function (){
 			// SNAKE-HEAD COLLISIONS SNAKE-BODY (gameover)
 			// empezamos a comprovar las colisiones por delante de la cabeza
 			// cabeza[1], cuello[1], cuerpo[2...], no comprobamos la interseccion de la cabeza con el cuello por colisiones continuas
-			for (var i = 20, len = SN.snakeBody.length; i < len; i++) {
-			    if( SN.snakeBody[0].intersects(SN.snakeBody[i]) ){
-			    	SN.gameover = true;
-			    	SN.asset.snake.musicDie.play();
-			    }
+			for (var i = 5, len = SN.snakeBody.length; i < len; i++) {
+				if( SN.snakeBody[0].intersects(SN.snakeBody[i]) ){
+					SN.gameover = true;
+					SN.asset.snake.musicDie.play();
+				}
 			};
 
 			// SNAKE-HEAD COLLISIONS FOOD (score + new snake-body + new food)
 			if( SN.snakeBody[0].intersects( SN.food ) ){
 				SN.score++;
-				SN.snakeBody.push( new Creature( SN.food.posX, SN.food.posY, 15, 10, 1) );
+				SN.snakeBody.push( new Creature( SN.food.posX, SN.food.posY, 10, 10, 1) );
 				SN.asset.snake.musicEat.play();
 				SN.food.posX = randomPosition( SN.canvas.width/10-1 )*10;
 				SN.food.posY = randomPosition( SN.canvas.height/10-1 )*10;
@@ -218,12 +209,17 @@ var saveUserKey = function (evClick) {
 	SN.keyPress.lastPress = evClick.keyCode;
 };
 
-// FRAMESET (animar al asset )
-var animateAsset = function (){
-	window.requestAnimationFrame(animateAsset);
+// FRAMESET ( dibujar los asset )
+var framePaintAsset = function (){
 	resetCanvas(SN.canvas, 300, 150);
-	moveAsset();
 	paintAsset(SN.ctx);
+	window.requestAnimationFrame(framePaintAsset);
+};
+
+// FRAMESET ( mover los asset )
+var frameMoveAsset = function (){
+	moveAsset();
+	window.setTimeout(frameMoveAsset, SN.vel);
 };
 
 // iniciar parametros del Juego
@@ -231,8 +227,7 @@ var initGameVar = function (){
 	// resetear el cuerpo de la serpiente
 	SN.snakeBody.length = 0;
 	// alinear tres partes del cuerpo de serpiente
-	SN.snakeBody.push( 
-		new Creature( null, null, 15, 10, 1 ) );
+	SN.snakeBody.push( new Creature( null, null, 10, 10, 1 ) );
 	
 	// resetar la posicion de la comida
 	SN.food.posX = randomPosition( SN.canvas.width/10-1 )*10;
@@ -254,7 +249,10 @@ var initGameVar = function (){
 	SN.asset.snake.musicDie.src = SN.asset.snake.dieSrc;
 
 	// inicializar variables del Juego
+	// al inicializar o resetear el juego estara pausado y sin movimientos previos
 	initGameVar();
-	// al inicializar el juego estara pausado
-	animateAsset();
+
+	// inicializar FRAMESETS del Juego
+	framePaintAsset();
+	frameMoveAsset();
 } (window, document) );
