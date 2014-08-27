@@ -13,13 +13,13 @@ var randomPosition = function (max){
     return Math.floor(Math.random()*max);
 };
 
+// constructor de propiedades privadas de assets
 var Creature = function ( x, y, width, height, d ){
 	this.w = width || 20;
 	this.h = height || this.w;
 	this.posX = x || (SN.canvas.width / 2) - (this.w / 2);
 	this.posY = y || (SN.canvas.height / 2) - (this.h / 2);
 	this.dir = d; // direccion del asset: arriba(0), dch(1), abajo(2), izq(3)
-
 };
 
 // conprobar colision con un asset del mismo tipo de constructor
@@ -45,7 +45,7 @@ Creature.prototype.fillImage = function (ctx, img, color){
 
 // variables estaticas del Juego
 var SN = {
-	vel: 35, // velocidad del frameset de movimiento
+	vel: 30, // velocidad del frameset de movimiento
 	canvas : canvasGame,
 	ctx: canvasGame.getContext('2d'),
 	snakeBody: [],	// criatura del juagdor
@@ -98,6 +98,7 @@ var paintAsset = function (ctx){
 	//dibujar asset de comida
 	SN.food.fillImage(ctx, SN.asset.food.img, '#f00')
 
+	// mostrar el estado del Juego
 	ctx.fillStyle = '#fff';
 	if( !!SN.paused ){
 		SN.ctx.textAlign = 'center';
@@ -247,6 +248,13 @@ var initGameVar = function (){
 	SN.asset.food.img.src = SN.asset.food.imgSrc;
 	SN.asset.snake.musicEat.src = SN.asset.snake.eatSrc;
 	SN.asset.snake.musicDie.src = SN.asset.snake.dieSrc;
+
+	// controlar velocidad con slider
+	var speed = document.querySelector('#speedGame');
+	speed.value = speed.max - SN.vel;
+	speed.addEventListener('change', function(){
+		SN.vel = this.max - this.value;
+	}, false);
 
 	// inicializar variables del Juego
 	// al inicializar o resetear el juego estara pausado y sin movimientos previos

@@ -10,6 +10,10 @@
 		<h1>Retro Snake</h1>
 		<p><b class="lead">juego de <i class="idea">canvas html5</i></b></p>
 	</header>
+	
+	<footer>
+		<p>Tutorial completo en <a href="http://juegos.canvas.ninja/">Juegos ninja</a></p>
+	</footer>
 
 	<div id="snakeGame">
 		<div class="snakeCanvas">
@@ -19,11 +23,12 @@
 		<div class="rulesGame">
 			<span class="paused show">pulsa <em>Enter</em> para pausar</span>
 		</div>
-	</div>
 
-	<footer>
-		<p>Tutorial completo en <a href="http://juegos.canvas.ninja/">Juegos ninja</a></p>
-	</footer>
+		<div>
+			<label for="speedGame">velocidad</label> : 
+			<input id="speedGame" type="range" min="0" max="50" value="0" step="5">
+		</div>
+	</div>
 
 	<script type="application/javascript" src="game.js"></script>
 </body>
