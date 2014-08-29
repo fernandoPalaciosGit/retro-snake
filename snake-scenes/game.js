@@ -10,20 +10,12 @@
 		SN.asset.food.animate();
 
 		// acpturar la velocidad con slider
-		var speed = d.querySelector('#speedGame');	
+		var speed = d.querySelector('#speedGame');
 		speed.value = speed.max - SN.vel;
 		speed.addEventListener('change', function (evChange){
 			SN.vel = this.max - this.value;
 			this.blur(); //perder el foco para continuar jugando
 		}, false);
-
-		//inicializar escenas de juego
-		SN.mainScene = new Scene();
-		SN.gameScene = new Scene();
-
-		// inicializar variables del Juego
-		// al inicializar o resetear el juego estara pausado y sin movimientos previos
-		initGameVar();
 
 		// inicializar FRAMESETS del Juego
 		framePaintAsset();
@@ -31,14 +23,14 @@
 	}, false);
 	
 	// el navegador gestionara los recursos de la animacion del asset
-	var requestAnimationFrame = 
+	var requestAnimationFrame =
 			w.requestAnimationFrame ||
 			w.webkitRequestAnimationFrame ||
 			w.mozRequestAnimationFrame ||
 			function(callback){ w.setTimeout(callback,17); };
 
 	var randomPosition = function (max){
-	    return Math.floor(Math.random()*max);
+		return Math.floor(Math.random()*max);
 	};
 
 	// resetear el layer cada vez que pintamos
@@ -48,13 +40,31 @@
 	};
 
 	var loadScene = function (sn){
-		SN.currentScene = sn.id;
-		SN.scenes[ SN.currentScene ].load(); // sn.load()
+		Scene.currentScene = sn.id;
+		// al inicializar o resetear el juego estara pausado y sin movimientos previos
+		Scene.addScenes[ Scene.currentScene ].load(); // sn.load()
+	};
+
+	SN.mainScene.paint = function(ctx){
+		ctx.fillStyle='#030';
+		ctx.fillRect(0, 0, SN.canvas.width, SN.canvas.height);
+
+		ctx.fillStyle = '#fff';
+		ctx.fillText('THE RETRO SNAKE', 150, 60);
+		ctx.fillText('Press Enter to Start',150,90);
+
+		ctx.textAlign = 'center';
+		if( !!SN.gameover ){
+			ctx.fillStyle = '#f00';
+			SN.ctx.fillText( 'GAME OVER', (SN.canvas.width/2), (SN.canvas.height/2) );
+		} else {
+			ctx.fillStyle = '#fff';
+			SN.ctx.fillText( '¡¡¡ COME ON !!!', (SN.canvas.width/2), (SN.canvas.height/2) );
+		}
 	};
 
 	// dibujar layer de juego y asset
-	var paintAsset = function (ctx){
-		// dibujar background
+	SN.gameScene.paint = function (ctx){
 		ctx.fillStyle = '#000';
 		ctx.fillRect(0, 0, SN.canvas.width, SN.canvas.height);
 		
@@ -70,43 +80,42 @@
 		ctx.fillStyle = '#fff';
 		if( !!SN.paused ){
 			SN.ctx.textAlign = 'center';
-			if( !!SN.gameover ){
-				ctx.fillStyle='#f00';
-				SN.ctx.fillText( 'GAME OVER', (SN.canvas.width/2), (SN.canvas.height/2) );
-			}else{
-				SN.ctx.fillText( 'PAUSE', (SN.canvas.width/2), (SN.canvas.height/2) );
-			}
+			SN.ctx.fillText( 'PAUSE', (SN.canvas.width/2), (SN.canvas.height/2) );
 		} else {
 			SN.ctx.textAlign = 'left';
 			ctx.fillText('Score: '+ SN.score, 5, 20); /*puntuacion*/
 		}
 	};
 
-	// mover la posicion del asset
-	var moveAsset = function (){
-		// MOVIMIENTO PAUSADO
+	SN.mainScene.act = function (){
+
 		if ( SN.keyPress.lastPress == SN.keyPress.KEY_ENTER ){
 			SN.gameover = false;
 			SN.keyPress.lastPress = null; // anulamos la interaccion pero mantenemos la direcion (dir)
 			SN.paused = !SN.paused; // invertimos la pausa cada vez que presionamos
+			//ahora la actividad que se ejecutara sera la de gameScene
+			loadScene(SN.gameScene);
+		}
+	};
+	
+	// mover la posicion del asset
+	SN.gameScene.act = function (){
+		if ( SN.keyPress.lastPress == SN.keyPress.KEY_ENTER ){
+			SN.paused = !SN.paused;
+			SN.keyPress.lastPress = null;
 		}
 
-		// MOVIMIENTO NO PAUSADO
 		if( !SN.paused ){
-				
+
 			// CHECK GAMEOVER (reset game variables)
 			if( SN.gameover ){
-				SN.gameover = true;
-				initGameVar();
+				//ahora la actividad que se ejecutara sera la de gameScene
+				loadScene(SN.mainScene);
 			} else {
 				// MOVE SNAKE-BODY ( don´t move the first asset; that´s the head)
-				/* Movemos los assets desde el ultimo hasta el antertior a la cabeza de serpiente, 
-					Efecto de oruga -> la cola va “empujando” al resto del cuerpo, asi evitamos la colision de la cabeza lcon el cuerpo*/
 				for (var i = SN.asset.snake.body.length - 1; i > 0; i--) {
 					SN.asset.snake.body[i].posX = SN.asset.snake.body[i - 1].posX;
 					SN.asset.snake.body[i].posY = SN.asset.snake.body[i - 1].posY;
-					// la cabeza es la unica que cambia de posicion con respecto a la velocidad;
-					// cuando alcanzemos el ultimo de los assets, e anterior a la cabeza, este recuperara la posicion anterior de la cabeza
 				}
 
 				// CHANGE DIRECTION (depending on SN.keyPress.lastPress head-snake)
@@ -163,7 +172,12 @@
 				// SNAKE-HEAD COLLISIONS FOOD (score + new snake-body + new food)
 				if( SN.asset.snake.body[0].intersects( SN.asset.food.apple ) ){
 					SN.score++;
-					SN.asset.snake.body.push( new Creature( SN.asset.food.apple.posX, SN.asset.food.apple.posY, 10, 10, 1) );
+					SN.asset.snake.body.push(
+						new Creature(
+							SN.asset.food.apple.posX, SN.asset.food.apple.posY, 10, 10, 1) );
+					SN.asset.snake.body.push(
+						new Creature(
+							SN.asset.food.apple.posX*2, SN.asset.food.apple.posY*2, 10, 10, 1) );
 					SN.asset.snake.musicEat.play();
 					SN.asset.food.apple.posX = randomPosition( SN.canvas.width/10-1 )*10;
 					SN.asset.food.apple.posY = randomPosition( SN.canvas.height/10-1 )*10;
@@ -181,20 +195,18 @@
 	// FRAMESET ( dibujar los asset )
 	var framePaintAsset = function (){
 		requestAnimationFrame(framePaintAsset);
-		SN.scenes[ SN.currentScene ].paint(SN.ctx);
 		resetCanvas(SN.canvas, 500, 300);
-		paintAsset(SN.ctx);
+		Scene.addScenes[ Scene.currentScene ].paint(SN.ctx); //SN.mainScene
 	};
 
 	// FRAMESET ( mover los asset )
 	var frameMoveAsset = function (){
 		w.setTimeout(frameMoveAsset, SN.vel);
-		SN.scenes[ SN.currentScene ].act();
-		moveAsset();
+		Scene.addScenes[ Scene.currentScene ].act(); //SN.mainScene
 	};
 
 	// iniciar parametros del Juego
-	var initGameVar = function (){
+	SN.gameScene.load = function (){
 		// resetear el cuerpo de la serpiente, y crear su cabeza
 		SN.asset.snake.body.length = 0;
 		SN.asset.snake.body.push( new Creature( null, null, 10, 10, 1 ) );

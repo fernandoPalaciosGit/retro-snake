@@ -1,4 +1,4 @@
-// constructor de propiedades privadas de assets
+// PROTOTIPO DE ASSETS
 var Creature = function ( x, y, width, height, d ){
 	this.w = width || 20;
 	this.h = height || this.w;
@@ -28,25 +28,28 @@ Creature.prototype.fillImage = function (ctx, img, color){
 	}
 };
 
-// prototipo de escenas y asignarlas a las escenas del juego
+// PROTOTIPO ESCENAS
 var Scene = function (){
-	this.id = SN.scenes.length;
-	SN.scenes.push(this);
+	this.id = this.constructor.addScenes.length;
+	this.constructor.addScenes.push(this);
 };
 
-Scene.prototype.load = function (){};
+// Propiedades estaticas de constructor (this.contructor)
+Scene.addScenes = [];
+Scene.currentScene = 0;
+
+// propiedades publicas de instancias (implementacion particular de cada escena)
 Scene.prototype.act = function (){};
 Scene.prototype.paint = function (ctx){};
+Scene.prototype.load = function (){};
 
 var SN = {
 	// LIENZO del Juego
 	canvas : document.querySelector('.snakeCanvas canvas'),
 	ctx: document.querySelector('.snakeCanvas canvas').getContext('2d'),
-	// ESCENAS de Juego
-	currentScene: 0,
 	scenes: [],
-	mainScene: null,
-   gameScene: null,
+	mainScene: new Scene(),
+   gameScene: new Scene(),
 	// ASSETS del Juego (posX, posY, w, h, dir)
 	asset: {
 		snake: {
