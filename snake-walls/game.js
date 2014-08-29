@@ -195,7 +195,7 @@ var saveUserKey = function (evClick) {
 // animar al asset
 var animateAsset = function (){
 	window.requestAnimationFrame(animateAsset);
-	resetCanvas(SN.canvas, 300, 150);
+	resetCanvas(SN.canvas, 500, 300);
 	moveAsset();
 	paintAsset(SN.ctx);
 };

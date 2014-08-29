@@ -212,7 +212,7 @@ var saveUserKey = function (evClick) {
 
 // FRAMESET ( dibujar los asset )
 var framePaintAsset = function (){
-	resetCanvas(SN.canvas, 300, 150);
+	resetCanvas(SN.canvas, 500, 300);
 	paintAsset(SN.ctx);
 	window.requestAnimationFrame(framePaintAsset);
 };
