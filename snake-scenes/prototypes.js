@@ -38,29 +38,19 @@ Scene.prototype.load = function (){};
 Scene.prototype.act = function (){};
 Scene.prototype.paint = function (ctx){};
 
-// variables estaticas del Juego
 var SN = {
-	vel: 30, // velocidad del frameset de movimiento
+	// LIENZO del Juego
 	canvas : document.querySelector('.snakeCanvas canvas'),
 	ctx: document.querySelector('.snakeCanvas canvas').getContext('2d'),
+	// ESCENAS de Juego
 	currentScene: 0,
 	scenes: [],
-	snakeBody: [],	// criatura del juagdor
-	// (posX, posY, w, h, dir)
-	food: new Creature( 1, 1, 10, 10, null),	// criatura comida
-	keyPress: {		// interaccion del usuario
-		lastPress : null,
-		KEY_LEFT : 37,
-		KEY_UP : 38,
-		KEY_RIGHT : 39,
-		KEY_DOWN : 40,
-		KEY_ENTER: 13
-	},
-	paused: null,
-	score: null,
-	gameover: false,
+	mainScene: null,
+   gameScene: null,
+	// ASSETS del Juego (posX, posY, w, h, dir)
 	asset: {
 		snake: {
+			body: [],
 			img: new Image(),
 			musicEat: new Audio(),
 			musicDie: new Audio(),
@@ -71,10 +61,24 @@ var SN = {
 			}
 		},
 		food: {
+			apple: new Creature( 1, 1, 10, 10, null),
 			img: new Image(),
 			animate: function(){
 				this.img.src = 'assets/fruit.png';
 			}
 		}
-	}
+	},
+	// parametros globales de Juego
+	vel: 30, // velocidad del frameset de movimiento
+	keyPress: {
+		lastPress : null,
+		KEY_LEFT : 37,
+		KEY_UP : 38,
+		KEY_RIGHT : 39,
+		KEY_DOWN : 40,
+		KEY_ENTER: 13
+	},
+	paused: null,
+	score: null,
+	gameover: false
 };
