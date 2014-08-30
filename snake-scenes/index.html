@@ -16,21 +16,33 @@
 	</footer>
 
 	<div id="snakeGame">
-		<div class="snakeCanvas">
+		<div class="snakePlayer">
+			<p><label for="snakePlayerName">Nombre de Jugador</label> : 
+				<input	id="snakePlayerName" type="text"
+							title="Nombre y Apellido para los puntajes"
+							placeholder="Federico Mallas Navarro" />
+				<input type="button" value="!!Jugar">
+			</p>
+		</div>
+		<div class="snakeCanvas hidenLayer">
 			<canvas width="500" height="300">Tu navegador no soporta la tecnologia de canvas</canvas>
+			<div>
+				<label for="speedGame">velocidad</label> : 
+				<input id="speedGame" type="range" min="0" max="50" value="0" step="5">
+			</div>
+			<div class="rulesGame">
+				<span class="paused">pulsa <em>Enter</em> para pausar</span>
+			</div>
 		</div>
 
-		<div class="rulesGame">
-			<span class="paused show">pulsa <em>Enter</em> para pausar</span>
-		</div>
 
-		<div>
-			<label for="speedGame">velocidad</label> : 
-			<input id="speedGame" type="range" min="0" max="50" value="0" step="5">
-		</div>
 	</div>
+
 	
 	<script src="prototypes.js" ></script>
 	<script src="game.js"></script>
+	<script src="mainScene.js"></script>
+	<script src="gameScene.js"></script>
+	<script src="scoreScene.js"></script>
 </body>
 </html>

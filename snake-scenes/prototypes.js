@@ -1,4 +1,7 @@
-// PROTOTIPO DE ASSETS
+///////////////////////////
+// CONSTRUCTOR DE ASSETS //
+///////////////////////////
+
 var Creature = function ( x, y, width, height, d ){
 	this.w = width || 20;
 	this.h = height || this.w;
@@ -28,7 +31,10 @@ Creature.prototype.fillImage = function (ctx, img, color){
 	}
 };
 
-// PROTOTIPO ESCENAS
+/////////////////////////
+// CONSTRUCTOR ESCENAS //
+/////////////////////////
+
 var Scene = function (){
 	this.id = this.constructor.addScenes.length;
 	this.constructor.addScenes.push(this);
@@ -43,6 +49,45 @@ Scene.prototype.act = function (){};
 Scene.prototype.paint = function (ctx){};
 Scene.prototype.load = function (){};
 
+
+///////////////////////
+// CONSTRUCTOR SCORE //
+///////////////////////
+
+var Score = function (){
+	this.highscores = ( !!localStorage.highscores ) ?
+							localStorage.highscores.split(',') : []; //best scores
+	this.name = ( !!localStorage.name ) ?
+					localStorage.name : '';
+	this.posHighscore = 10;
+	this.setUser = function (n){
+		this.name = n;
+		localStorage.name = n;
+	};
+};
+
+//set score when game over
+Score.prototype.setHighscores = function (score){
+	this.posHighscore = 0;
+	//calcular la posicion dentro de nuestra lista de puntajes
+	while(	this.highscores[this.posHighscore] > score
+				&& this.posHighscore < this.highscores.length ){
+		this.posHighscore++;
+	}
+	//añadir nuestro score al array
+	this.highscores.splice( this.posHighscore, 0, score);
+	//limitamos nuestra lista a diez elementos
+	if ( this.highscores.length > 10 ){
+		this.highscores.length = 10;
+	}
+	// almacenarlo en localstorage (string)
+	localStorage.highscores = this.highscores.join(',');
+};
+
+////////////////////////
+// VARIABLES GLOBALES //
+////////////////////////
+
 var SN = {
 	// LIENZO del Juego
 	canvas : document.querySelector('.snakeCanvas canvas'),
@@ -50,6 +95,8 @@ var SN = {
 	scenes: [],
 	mainScene: new Scene(),
    gameScene: new Scene(),
+   highscoresScene: new Scene(),
+   userScore: new Score(),
 	// ASSETS del Juego (posX, posY, w, h, dir)
 	asset: {
 		snake: {
@@ -83,5 +130,5 @@ var SN = {
 	},
 	paused: null,
 	score: null,
-	gameover: false
+	gameover: false,
 };

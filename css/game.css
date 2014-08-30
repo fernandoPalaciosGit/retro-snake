@@ -1,6 +1,7 @@
 body{
 	text-align: center;
 }
+
 .snakeCanvas canvas{
 	width: 500px;
 	height: 300px;
@@ -9,11 +10,13 @@ body{
 }
 
 .rulesGame .paused{
-	display: none;
 	font-size: 1.1em;
 	font-weight: bold;
 }
 
-.show{
-	display: inline !important;
+.showLayer{
+	display: block !important;
+}
+.hidenLayer{
+	display: none;
 }
